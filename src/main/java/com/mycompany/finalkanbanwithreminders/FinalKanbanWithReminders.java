@@ -1,34 +1,24 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.mycompany.finalkanbanwithreminders;
 
-/**
- *
- * @author User
- */
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.awt.datatransfer.*;
 
 public class FinalKanbanWithReminders extends JFrame {
     
     public FinalKanbanWithReminders() {
-        // Basic setup
         setTitle("Kanban Board with Reminders");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         
-        // Main panel
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(new Color(255, 240, 240)); // Light pink
+        mainPanel.setBackground(new Color(255, 240, 240));
         add(mainPanel);
 
-        // Create columns
         JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15));
         columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
@@ -42,16 +32,14 @@ public class FinalKanbanWithReminders extends JFrame {
     private void addColumn(JPanel parent, String title, boolean canAddTasks) {
         JPanel column = new JPanel();
         column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
-        column.setBackground(new Color(255, 230, 230)); // Column pink
+        column.setBackground(new Color(255, 230, 230));
         column.setBorder(BorderFactory.createLineBorder(new Color(220, 180, 180), 2));
 
-        // Column header
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
         column.add(titleLabel);
         column.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // Add task button (only for To Do)
         if (canAddTasks) {
             JButton addBtn = new JButton("+ Add Task");
             styleButton(addBtn);
@@ -60,6 +48,7 @@ public class FinalKanbanWithReminders extends JFrame {
             column.add(Box.createRigidArea(new Dimension(0, 10)));
         }
 
+        setupDropTarget(column);
         parent.add(column);
     }
 
@@ -68,12 +57,9 @@ public class FinalKanbanWithReminders extends JFrame {
         dialog.setLayout(new GridLayout(0, 1, 10, 10));
         dialog.setSize(350, 300);
 
-        // Task fields
         JTextField taskField = new JTextField();
-        JComboBox<String> priorityCombo = new JComboBox<>(
-            new String[]{"High", "Medium", "Low"});
+        JComboBox<String> priorityCombo = new JComboBox<>(new String[]{"High", "Medium", "Low"});
         
-        // Reminder time
         JSpinner timeSpinner = new JSpinner(new SpinnerDateModel());
         JSpinner.DateEditor timeEditor = new JSpinner.DateEditor(timeSpinner, "MM/dd/yyyy hh:mm a");
         timeSpinner.setEditor(timeEditor);
@@ -102,44 +88,24 @@ public class FinalKanbanWithReminders extends JFrame {
     }
 
     private void addTaskWithReminder(JPanel column, String text, String priority, java.util.Date reminderTime) {
-        // Create task card
         Color color = getPriorityColor(priority);
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(color);
         card.setBorder(BorderFactory.createLineBorder(color.darker(), 2));
         card.setPreferredSize(new Dimension(180, 80));
 
-        // Add task text
         JLabel textLabel = new JLabel("<html><center>" + text + "</center></html>");
         card.add(textLabel, BorderLayout.CENTER);
 
-        // Add reminder time
-        JLabel timeLabel = new JLabel(
-            "<html><small>" + formatReminderTime(reminderTime) + "</small></html>",
-            SwingConstants.RIGHT
-        );
+        String timeStr = formatReminderTime(reminderTime);
+        JLabel timeLabel = new JLabel("<html><small>" + timeStr + "</small></html>", SwingConstants.RIGHT);
         card.add(timeLabel, BorderLayout.SOUTH);
 
+        setupDragSource(card);
         column.add(card);
         column.revalidate();
 
-        // Schedule reminder
         scheduleReminder(text, reminderTime);
-    }
-
-    private void scheduleReminder(String taskText, java.util.Date reminderTime) {
-        // In a real app, you would:
-        // 1. Use Google Calendar API OR
-        // 2. Use java.util.Timer for local reminders
-        
-        // This just shows a confirmation
-        String timeStr = formatReminderTime(reminderTime);
-        JOptionPane.showMessageDialog(
-            this, 
-            "Reminder set for:\n" + timeStr + "\n\nTask: " + taskText,
-            "Reminder Scheduled",
-            JOptionPane.INFORMATION_MESSAGE
-        );
     }
 
     private String formatReminderTime(java.util.Date time) {
@@ -160,6 +126,95 @@ public class FinalKanbanWithReminders extends JFrame {
         btn.setBackground(new Color(255, 180, 180));
         btn.setForeground(Color.WHITE);
         btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+    }
+
+    // ===== DRAG AND DROP IMPLEMENTATION =====
+    private void setupDragSource(JPanel card) {
+        card.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                JComponent c = (JComponent) e.getSource();
+                TransferHandler handler = c.getTransferHandler();
+                handler.exportAsDrag(c, e, TransferHandler.MOVE);
+            }
+        });
+
+        card.setTransferHandler(new TransferHandler("background") {
+            @Override
+            public int getSourceActions(JComponent c) {
+                return TransferHandler.MOVE;
+            }
+
+            @Override
+            protected Transferable createTransferable(JComponent c) {
+                JPanel card = (JPanel)c;
+                String text = ((JLabel)card.getComponent(0)).getText();
+                String time = card.getComponentCount() > 1 ? ((JLabel)card.getComponent(1)).getText() : "";
+                Color bg = card.getBackground();
+                return new StringSelection(text + "||" + time + "||" + bg.getRGB());
+            }
+
+            @Override
+            protected void exportDone(JComponent source, Transferable data, int action) {
+                if (action == TransferHandler.MOVE) {
+                    Container parent = source.getParent();
+                    parent.remove(source);
+                    parent.revalidate();
+                    parent.repaint();
+                }
+            }
+        });
+    }
+
+    private void setupDropTarget(JPanel column) {
+        column.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                column.setBorder(BorderFactory.createLineBorder(Color.BLUE, 2));
+                return support.isDataFlavorSupported(DataFlavor.stringFlavor);
+            }
+
+            @Override
+            public boolean importData(TransferSupport support) {
+                try {
+                    String data = (String)support.getTransferable().getTransferData(DataFlavor.stringFlavor);
+                    String[] parts = data.split("\\|\\|");
+                    
+                    JPanel newCard = new JPanel(new BorderLayout());
+                    newCard.setBackground(new Color(Integer.parseInt(parts[2])));
+                    newCard.setBorder(BorderFactory.createLineBorder(new Color(220, 180, 180), 2));
+                    newCard.setPreferredSize(new Dimension(180, 80));
+                    
+                    JLabel textLabel = new JLabel(parts[0]);
+                    newCard.add(textLabel, BorderLayout.CENTER);
+                    
+                    if (!parts[1].isEmpty()) {
+                        JLabel timeLabel = new JLabel(parts[1], SwingConstants.RIGHT);
+                        newCard.add(timeLabel, BorderLayout.SOUTH);
+                    }
+                    
+                    setupDragSource(newCard);
+                    column.add(newCard);
+                    column.revalidate();
+                    
+                    return true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                } finally {
+                    column.setBorder(BorderFactory.createLineBorder(new Color(220, 180, 180), 2));
+                }
+            }
+        });
+    }
+
+    private void scheduleReminder(String taskText, java.util.Date reminderTime) {
+        String timeStr = formatReminderTime(reminderTime);
+        JOptionPane.showMessageDialog(
+            this, 
+            "Reminder set for:\n" + timeStr + "\n\nTask: " + taskText,
+            "Reminder Scheduled",
+            JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
     public static void main(String[] args) {
