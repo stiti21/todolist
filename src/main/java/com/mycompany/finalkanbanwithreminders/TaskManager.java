@@ -4,6 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+/**
+ * @author Mahasen Al-Tamimi
+ * @description This class is responsible for managing tasks (Add, Remove, Display)
+ */
 
 public class TaskManager {
     private List<Task> tasks;
