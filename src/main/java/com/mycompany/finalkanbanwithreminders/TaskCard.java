@@ -1,6 +1,6 @@
 package com.mycompany.finalkanbanwithreminders;
 
-import com.mycompany.todolist.Task;
+import com.mycompany.finalkanbanwithreminders.Task;
 import javax.swing.*;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
