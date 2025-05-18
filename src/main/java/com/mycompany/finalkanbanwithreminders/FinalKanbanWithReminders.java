@@ -226,9 +226,16 @@ public class FinalKanbanWithReminders extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            FinalKanbanWithReminders board = new FinalKanbanWithReminders();
-            board.setVisible(true);
-        });
-    }
+    // 🌟 Welcome Message 
+    System.out.println("-------------------------------------------------------------");
+    System.out.println("🌟 Welcome to the To-Do List with Reminders Application! 🌟");
+    System.out.println("Developed by: Mahasen Al-Tamimi, Sulaf Ahmed Al-Titi, Ruqaia Mohammed");
+    System.out.println("-------------------------------------------------------------");
+
+    SwingUtilities.invokeLater(() -> {
+        FinalKanbanWithReminders board = new FinalKanbanWithReminders();
+        board.setVisible(true);
+    });
+}
+
 }
