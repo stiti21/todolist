@@ -20,7 +20,7 @@ import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.awt.datatransfer.*;
-
+import java.time.*;
 public class FinalKanbanWithReminders extends JFrame {
     // constructer 
     public FinalKanbanWithReminders() {
@@ -159,6 +159,14 @@ public class FinalKanbanWithReminders extends JFrame {
         String timeStr = formatReminderTime(reminderTime);
         JLabel timeLabel = new JLabel("<html><small>" + timeStr + "</small></html>", SwingConstants.RIGHT);
         card.add(timeLabel, BorderLayout.SOUTH);
+        LocalDateTime dateTime = LocalDateTime.ofInstant(reminderTime.toInstant(), ZoneId.systemDefault());
+        LocalDate date = dateTime.toLocalDate();
+        LocalTime time = dateTime.toLocalTime();
+        Task task = new Task(text, priority, date, time);
+        TaskManager.addTask(task);
+        ReminderScheduler scheduler = new ReminderScheduler();
+        scheduler.schedule(task);
+        TaskCard card = new TaskCard(task);
 
         setupDragSource(card);
         column.add(card);
