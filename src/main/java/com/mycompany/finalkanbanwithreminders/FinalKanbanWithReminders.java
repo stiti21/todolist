@@ -23,18 +23,24 @@ import java.util.Date;
 
 public class FinalKanbanWithReminders extends JFrame {
 
+    // Main TaskManager to handle all tasks
     private final TaskManager taskManager;
+    // Scheduler for handling task reminders
     private final ReminderScheduler reminderScheduler;
 
+    /**
+     * Main Constructor to set up the GUI window
+     */
     public FinalKanbanWithReminders() {
         setTitle("Kanban Board with Reminders");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        taskManager = new TaskManager();
-        reminderScheduler = new ReminderScheduler();
+        taskManager = new TaskManager();            // Initialize Task Manager
+        reminderScheduler = new ReminderScheduler(); // Initialize Reminder Scheduler
 
+        // Handle window closing event with confirmation
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -57,10 +63,12 @@ public class FinalKanbanWithReminders extends JFrame {
             }
         });
 
+        // Main Panel Layout Setup
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(255, 240, 240));
         add(mainPanel);
 
+        // Setup columns for Kanban Board (To Do, In Progress, Done)
         JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15));
         columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
@@ -71,6 +79,9 @@ public class FinalKanbanWithReminders extends JFrame {
         mainPanel.add(columns, BorderLayout.CENTER);
     }
 
+    /**
+     * Method to create a Kanban column
+     */
     private void addColumn(JPanel parent, String title, boolean canAddTasks) {
         JPanel column = new JPanel();
         column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
@@ -93,6 +104,9 @@ public class FinalKanbanWithReminders extends JFrame {
         parent.add(column);
     }
 
+    /**
+     * Method to show the dialog for adding a new task
+     */
     private void showAddTaskDialog(JPanel targetColumn) {
         JDialog dialog = new JDialog(this, "Add Task with Reminder", true);
         dialog.setLayout(new GridLayout(0, 1, 10, 10));
@@ -112,11 +126,22 @@ public class FinalKanbanWithReminders extends JFrame {
         dialog.add(timeSpinner);
 
         JButton saveBtn = new JButton("Save with Reminder");
+
+        // Add Task to the TaskManager and the UI
         saveBtn.addActionListener(e -> {
             if (!taskField.getText().isEmpty()) {
                 Date reminderTime = (Date) timeSpinner.getValue();
-                Task task = new Task(taskField.getText(), (String) priorityCombo.getSelectedItem(), LocalDate.now(), LocalTime.now());
-                taskManager.addTask(task);
+
+                // Create the task object
+                Task task = new Task(
+                    taskField.getText(),
+                    (String) priorityCombo.getSelectedItem(),
+                    LocalDate.now(),
+                    LocalTime.now()
+                );
+
+                // Add to TaskManager and UI
+                taskManager.addTask(task); // ✅ This will work correctly now
                 addTaskWithReminder(targetColumn, task, reminderTime);
                 dialog.dispose();
             } else {
@@ -133,6 +158,9 @@ public class FinalKanbanWithReminders extends JFrame {
         dialog.setVisible(true);
     }
 
+    /**
+     * Method to add a visual representation of the task to the board
+     */
     private void addTaskWithReminder(JPanel column, Task task, Date reminderTime) {
         TaskCard card = new TaskCard(task);
         column.add(card);
@@ -140,14 +168,19 @@ public class FinalKanbanWithReminders extends JFrame {
         reminderScheduler.schedule(task);
     }
 
+    /**
+     * Method to style the button consistently
+     */
     private void styleButton(JButton button) {
         button.setFocusPainted(false);
         button.setBackground(new Color(220, 220, 220));
         button.setFont(new Font("Arial", Font.PLAIN, 12));
     }
 
+    /**
+     * Main method to launch the application
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(FinalKanbanWithReminders::new);
     }
 }
-
