@@ -7,8 +7,10 @@
 // -----------------------------------------------------
 
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * This class is responsible for scheduling reminders for tasks.
+ * It calculates the remaining time before the reminder and triggers a notification.
+ * If the task time has passed, it notifies the user immediately.
+ * It uses Java Timer to handle the countdown and trigger the popup alert.
  */
 package com.mycompany.finalkanbanwithreminders;
 
