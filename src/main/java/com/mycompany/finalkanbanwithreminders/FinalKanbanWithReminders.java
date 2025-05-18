@@ -17,174 +17,151 @@ package com.mycompany.finalkanbanwithreminders;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Date;
+import java.awt.datatransfer.*;
+import java.time.*;
+import java.time.format.*;
 
 public class FinalKanbanWithReminders extends JFrame {
-
-    // Main TaskManager to handle all tasks
-    private final TaskManager taskManager;
-    // Scheduler for handling task reminders
-    private final ReminderScheduler reminderScheduler;
-
-    /**
-     * Main Constructor to set up the GUI window
-     */
+    
     public FinalKanbanWithReminders() {
-        setTitle("Kanban Board with Reminders");
+        setTitle("Kanban Board");
         setSize(1000, 700);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        
+        JPanel main = new JPanel(new BorderLayout());
+        JPanel cols = new JPanel(new GridLayout(1,3,15,15));
+        cols.setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
+        
+        addColumn(cols, "To Do", true);
+        addColumn(cols, "In Progress", false);
+        addColumn(cols, "Done", false);
+        
+        main.add(cols);
+        add(main);
+    }
 
-        taskManager = new TaskManager();            // Initialize Task Manager
-        reminderScheduler = new ReminderScheduler(); // Initialize Reminder Scheduler
+    void addColumn(JPanel p, String title, boolean canAdd) {
+        JPanel col = new JPanel();
+        col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+        col.setBorder(BorderFactory.createLineBorder(new Color(220,180,180),2));
+        
+        col.add(new JLabel(title){{setFont(new Font("Arial",Font.BOLD,16));}});
+        col.add(Box.createRigidArea(new Dimension(0,10)));
+        
+        if(canAdd) col.add(new JButton("+ Add Task"){{
+            setBackground(new Color(255,180,180));
+            setForeground(Color.WHITE);
+            addActionListener(e->showAddDialog(col));
+        }});
+        
+        setupDrop(col);
+        p.add(col);
+    }
 
-        // Handle window closing event with confirmation
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                int confirm = JOptionPane.showConfirmDialog(
-                    null,
-                    "Are you sure you want to exit the application?",
-                    "Exit Confirmation",
-                    JOptionPane.YES_NO_OPTION
+    void showAddDialog(JPanel col) {
+        JDialog d = new JDialog(this,"Add Task",true);
+        d.setLayout(new GridLayout(0,1,10,10));
+        
+        JTextField tf = new JTextField();
+        JComboBox<String> cb = new JComboBox<>(new String[]{"High","Medium","Low"});
+        JSpinner sp = new JSpinner(new SpinnerDateModel());
+        sp.setEditor(new JSpinner.DateEditor(sp,"MM/dd/yyyy hh:mm a"));
+        
+        d.add(new JLabel("Task:"));
+        d.add(tf);
+        d.add(new JLabel("Priority:"));
+        d.add(cb);
+        d.add(new JLabel("Reminder:"));
+        d.add(sp);
+        d.add(new JButton("Save"){{
+            addActionListener(e->{
+                if(!tf.getText().isEmpty()) {
+                    addTask(col,tf.getText(),(String)cb.getSelectedItem(),(java.util.Date)sp.getValue());
+                    d.dispose();
+                }
+            });
+        }});
+        
+        d.setSize(350,300);
+        d.setVisible(true);
+    }
+
+    void addTask(JPanel col, String text, String pri, java.util.Date time) {
+        Color c = switch(pri) {
+            case "High"->new Color(255,200,200);
+            case "Medium"->new Color(255,220,180);
+            default->new Color(220,255,200);
+        };
+        
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(c);
+        card.setBorder(BorderFactory.createLineBorder(c.darker(),2));
+        card.setPreferredSize(new Dimension(180,80));
+        
+        card.add(new JLabel("<html><center>"+text+"</center></html>"));
+        String t = DateTimeFormatter.ofPattern("MMM dd, hh:mm a")
+                   .format(LocalDateTime.ofInstant(time.toInstant(),ZoneId.systemDefault()));
+        card.add(new JLabel("<html><small>"+t+"</small></html>",SwingConstants.RIGHT),BorderLayout.SOUTH);
+        
+        setupDrag(card);
+        col.add(card);
+        col.revalidate();
+        
+        JOptionPane.showMessageDialog(this,"Reminder set for:\n"+t+"\n\nTask: "+text);
+    }
+
+    void setupDrag(JPanel card) {
+        card.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                ((JComponent)e.getSource()).getTransferHandler().exportAsDrag((JComponent)e.getSource(),e,TransferHandler.MOVE);
+            }
+        });
+        
+        card.setTransferHandler(new TransferHandler("bg") {
+            protected Transferable createTransferable(JComponent c) {
+                JPanel p = (JPanel)c;
+                return new StringSelection(
+                    ((JLabel)p.getComponent(0)).getText()+"||"+
+                    (p.getComponentCount()>1?((JLabel)p.getComponent(1)).getText():"")+"||"+
+                    p.getBackground().getRGB()
                 );
-
-                if (confirm == JOptionPane.YES_OPTION) {
-                    JOptionPane.showMessageDialog(
-                        null,
-                        "Thank you for using the To-Do List Application. Goodbye! 👋",
-                        "Program Terminated",
-                        JOptionPane.INFORMATION_MESSAGE
-                    );
-                    System.exit(0);
+            }
+            public int getSourceActions(JComponent c) { return TransferHandler.MOVE; }
+            protected void exportDone(JComponent c, Transferable t, int a) {
+                if(a==TransferHandler.MOVE) {
+                    c.getParent().remove(c);
+                    c.getParent().revalidate();
                 }
             }
         });
-
-        // Main Panel Layout Setup
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(new Color(255, 240, 240));
-        add(mainPanel);
-
-        // Setup columns for Kanban Board (To Do, In Progress, Done)
-        JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15));
-        columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-
-        addColumn(columns, "To Do", true);
-        addColumn(columns, "In Progress", false);
-        addColumn(columns, "Done", false);
-
-        mainPanel.add(columns, BorderLayout.CENTER);
     }
 
-    /**
-     * Method to create a Kanban column
-     */
-    private void addColumn(JPanel parent, String title, boolean canAddTasks) {
-        JPanel column = new JPanel();
-        column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
-        column.setBackground(new Color(255, 230, 230));
-        column.setBorder(BorderFactory.createLineBorder(new Color(220, 180, 180), 2));
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        column.add(titleLabel);
-        column.add(Box.createRigidArea(new Dimension(0, 10)));
-
-        if (canAddTasks) {
-            JButton addBtn = new JButton("+ Add Task");
-            styleButton(addBtn);
-            addBtn.addActionListener(e -> showAddTaskDialog(column));
-            column.add(addBtn);
-            column.add(Box.createRigidArea(new Dimension(0, 10)));
-        }
-
-        parent.add(column);
-    }
-
-    /**
-     * Method to show the dialog for adding a new task
-     */
-    private void showAddTaskDialog(JPanel targetColumn) {
-        JDialog dialog = new JDialog(this, "Add Task with Reminder", true);
-        dialog.setLayout(new GridLayout(0, 1, 10, 10));
-        dialog.setSize(350, 300);
-
-        JTextField taskField = new JTextField();
-        JComboBox<String> priorityCombo = new JComboBox<>(new String[]{"High", "Medium", "Low"});
-        JSpinner timeSpinner = new JSpinner(new SpinnerDateModel());
-        JSpinner.DateEditor timeEditor = new JSpinner.DateEditor(timeSpinner, "MM/dd/yyyy hh:mm a");
-        timeSpinner.setEditor(timeEditor);
-
-        dialog.add(new JLabel("Task Description:"));
-        dialog.add(taskField);
-        dialog.add(new JLabel("Priority:"));
-        dialog.add(priorityCombo);
-        dialog.add(new JLabel("Reminder Time:"));
-        dialog.add(timeSpinner);
-
-        JButton saveBtn = new JButton("Save with Reminder");
-
-        // Add Task to the TaskManager and the UI
-        saveBtn.addActionListener(e -> {
-            if (!taskField.getText().isEmpty()) {
-                Date reminderTime = (Date) timeSpinner.getValue();
-
-                // Create the task object
-                Task task = new Task(
-                    taskField.getText(),
-                    (String) priorityCombo.getSelectedItem(),
-                    LocalDate.now(),
-                    LocalTime.now()
-                );
-
-                // Add to TaskManager and UI
-                taskManager.addTask(task); // ✅ This will work correctly now
-                addTaskWithReminder(targetColumn, task, reminderTime);
-                dialog.dispose();
-            } else {
-                JOptionPane.showMessageDialog(
-                    dialog,
-                    "❌ Task description cannot be empty!",
-                    "Input Error",
-                    JOptionPane.ERROR_MESSAGE
-                );
+    void setupDrop(JPanel col) {
+        col.setTransferHandler(new TransferHandler() {
+            public boolean canImport(TransferSupport s) {
+                col.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));
+                return s.isDataFlavorSupported(DataFlavor.stringFlavor);
+            }
+            public boolean importData(TransferSupport s) {
+                try {
+                    String[] d = ((String)s.getTransferable().getTransferData(DataFlavor.stringFlavor)).split("\\|\\|");
+                    JPanel card = new JPanel(new BorderLayout());
+                    card.setBackground(new Color(Integer.parseInt(d[2])));
+                    card.setBorder(BorderFactory.createLineBorder(new Color(220,180,180),2));
+                    card.setPreferredSize(new Dimension(180,80));
+                    card.add(new JLabel(d[0]));
+                    if(!d[1].isEmpty()) card.add(new JLabel(d[1],SwingConstants.RIGHT),BorderLayout.SOUTH);
+                    setupDrag(card);
+                    col.add(card);
+                    col.revalidate();
+                    return true;
+                } catch(Exception e) { return false; }
+                finally { col.setBorder(BorderFactory.createLineBorder(new Color(220,180,180),2)); }
             }
         });
-
-        dialog.add(saveBtn);
-        dialog.setVisible(true);
     }
 
-    /**
-     * Method to add a visual representation of the task to the board
-     */
-    private void addTaskWithReminder(JPanel column, Task task, Date reminderTime) {
-        TaskCard card = new TaskCard(task);
-        column.add(card);
-        column.revalidate();
-        reminderScheduler.schedule(task);
-    }
-
-    /**
-     * Method to style the button consistently
-     */
-    private void styleButton(JButton button) {
-        button.setFocusPainted(false);
-        button.setBackground(new Color(220, 220, 220));
-        button.setFont(new Font("Arial", Font.PLAIN, 12));
-    }
-
-    /**
-     * Main method to launch the application
-     */
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            FinalKanbanWithReminders app = new FinalKanbanWithReminders();
-            app.setVisible(true); // ✅ Fixed: Now the window will be visible
-            System.out.println("Application Launched Successfully!"); // ✅ Print to console for confirmation
-        });
+        SwingUtilities.invokeLater(()->new FinalKanbanWithReminders().setVisible(true));
     }
 }
