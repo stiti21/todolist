@@ -33,7 +33,7 @@ public class ReminderScheduler {
     LocalDateTime now = LocalDateTime.now();
     long delayInMillis = Duration.between(now, taskDateTime).toMillis(); //in millis 
     if (delayInMillis < 0) {
-        System.out.println("Reminder time has already passed.");
+        JOptionPane.showMessageDialog(null,"Reminder time has already passed.");
        
     }
     else if (delayInMillis == 0) {
