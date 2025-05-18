@@ -18,20 +18,26 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Represents the visual display of a single task in the Kanban Board.
+ * It creates a card with the task description, priority color, and reminder time.
+ */
 public class TaskCard extends JPanel {
     private final Task task;
 
-    // Constructor to initialize the task card with task data
+    /**
+     * Constructor to initialize the task card with task data
+     */
     public TaskCard(Task task) {
         this.task = task;
         setupCard(); // Prepare the visual appearance of the card
     }
 
-    // Method to set up the card's layout and display information
+    /**
+     * Method to set up the card's layout and display information
+     */
     private void setupCard() {
         setLayout(new BorderLayout());
-        
-        // Set the background color based on priority level
         setBackground(getPriorityColor(task.getPriority()));
         setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
         setPreferredSize(new Dimension(180, 80));
@@ -44,7 +50,7 @@ public class TaskCard extends JPanel {
         if (task.getDate() != null && task.getTime() != null) {
             String timeText = task.getDate() + " " + 
                 task.getTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
-            
+
             // Display the formatted time on the card
             JLabel timeLabel = new JLabel(timeText, SwingConstants.RIGHT);
             timeLabel.setFont(new Font("Arial", Font.PLAIN, 10));
@@ -52,7 +58,9 @@ public class TaskCard extends JPanel {
         }
     }
 
-    // Method to get the color associated with the task priority
+    /**
+     * Method to get the color associated with the task priority
+     */
     private Color getPriorityColor(String priority) {
         return switch (priority) {
             case "High" -> new Color(255, 200, 200); // Red for High Priority
@@ -62,8 +70,10 @@ public class TaskCard extends JPanel {
         };
     }
 
-    // Getter to retrieve the task object
-    public Task getTask() { 
-        return task; 
+    /**
+     * Getter to retrieve the task object
+     */
+    public Task getTask() {
+        return task;
     }
 }
