@@ -14,66 +14,45 @@
 
 package com.mycompany.finalkanbanwithreminders;
 
+import com.mycompany.todolist.Task;
 import javax.swing.*;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Represents the visual display of a single task in the Kanban Board.
- * It creates a card with the task description, priority color, and reminder time.
- */
 public class TaskCard extends JPanel {
     private final Task task;
 
-    /**
-     * Constructor to initialize the task card with task data
-     */
     public TaskCard(Task task) {
         this.task = task;
-        setupCard(); // Prepare the visual appearance of the card
+        setupCard();
     }
 
-    /**
-     * Method to set up the card's layout and display information
-     */
     private void setupCard() {
         setLayout(new BorderLayout());
         setBackground(getPriorityColor(task.getPriority()));
         setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
         setPreferredSize(new Dimension(180, 80));
 
-        // Display the task description
         JLabel descriptionLabel = new JLabel("<html><center>" + task.getDescription() + "</center></html>");
         add(descriptionLabel, BorderLayout.CENTER);
 
-        // Display the date and time if available
         if (task.getDate() != null && task.getTime() != null) {
             String timeText = task.getDate() + " " + 
                 task.getTime().format(DateTimeFormatter.ofPattern("hh:mm a"));
-
-            // Display the formatted time on the card
             JLabel timeLabel = new JLabel(timeText, SwingConstants.RIGHT);
             timeLabel.setFont(new Font("Arial", Font.PLAIN, 10));
             add(timeLabel, BorderLayout.SOUTH);
         }
     }
 
-    /**
-     * Method to get the color associated with the task priority
-     */
     private Color getPriorityColor(String priority) {
         return switch (priority) {
-            case "High" -> new Color(255, 200, 200); // Red for High Priority
-            case "Medium" -> new Color(255, 220, 180); // Orange for Medium Priority
-            case "Low" -> new Color(220, 255, 200); // Green for Low Priority
+            case "High" -> new Color(255, 200, 200);
+            case "Medium" -> new Color(255, 220, 180);
+            case "Low" -> new Color(220, 255, 200);
             default -> Color.WHITE;
         };
     }
 
-    /**
-     * Getter to retrieve the task object
-     */
-    public Task getTask() {
-        return task;
-    }
+    public Task getTask() { return task; }
 }
