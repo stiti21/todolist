@@ -181,6 +181,10 @@ public class FinalKanbanWithReminders extends JFrame {
      * Main method to launch the application
      */
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(FinalKanbanWithReminders::new);
+        SwingUtilities.invokeLater(() -> {
+            FinalKanbanWithReminders app = new FinalKanbanWithReminders();
+            app.setVisible(true); // ✅ Fixed: Now the window will be visible
+            System.out.println("Application Launched Successfully!"); // ✅ Print to console for confirmation
+        });
     }
 }
