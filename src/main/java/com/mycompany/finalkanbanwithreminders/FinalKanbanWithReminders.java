@@ -5,6 +5,12 @@
 // - Sulaf Ahmed Al-Titi - 2021904034
 // - Ruqaia  Manwar - 2023905070
 // -----------------------------------------------------
+/*
+ * This class is responsible for the main graphical user interface (GUI) of the application.
+ * It initializes the Kanban Board with three main columns: "To Do", "In Progress", and "Done".
+ * Each column allows adding, moving, and removing tasks with visual representation.
+ * The class also handles task creation and the integration with ReminderScheduler for notifications.
+ */
 
 package com.mycompany.finalkanbanwithreminders;
 
