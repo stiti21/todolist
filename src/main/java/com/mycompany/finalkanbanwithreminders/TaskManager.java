@@ -15,26 +15,20 @@
 
 package com.mycompany.finalkanbanwithreminders;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-/**
- * @author Mahasen Al-Tamimi
- * @description This class is responsible for managing tasks (Add, Remove, Display)
- */
 
 public class TaskManager {
-    private List<Task> tasks;
+    private final List<Task> tasks;
 
     public TaskManager() {
         tasks = new ArrayList<>();
     }
 
-    public void addTask(String description, String priority, LocalDate date, LocalTime time) {
-        Task task = new Task(description, priority, date, time);
+    // Modified to accept Task directly
+    public void addTask(Task task) {
         tasks.add(task);
-        System.out.println("Task added: " + description);
+        System.out.println("Task added: " + task.getDescription());
     }
 
     public void removeTask(String description) {
@@ -53,4 +47,3 @@ public class TaskManager {
         return tasks;
     }
 }
-
