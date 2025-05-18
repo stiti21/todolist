@@ -15,33 +15,41 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- *
- * @author roqaia
+ * Represents a single Task in the Kanban board.
+ * It holds the task description, priority, date, and time.
  */
 public class Task {
-    private String taskDescription;
-    private String taskPriority;
+    private String description;
+    private String priority;
     private LocalDate date;
     private LocalTime time;
-    
-    
-    public Task(String description, String priority,  LocalDate date, LocalTime time) {
-        this.taskDescription = description;
-        this.taskPriority = priority;
+
+    /**
+     * Constructor to initialize the Task object
+     */
+    public Task(String description, String priority, LocalDate date, LocalTime time) {
+        this.description = description;
+        this.priority = priority;
         this.date = date;
         this.time = time;
-    
-}
+    }
+
+    /**
+     * Getters for each attribute
+     */
     public String getDescription() {
-        return taskDescription; 
+        return description;
     }
-    public String getPriority(){
-        return taskPriority;
+
+    public String getPriority() {
+        return priority;
     }
-     public LocalDate getDate() {
+
+    public LocalDate getDate() {
         return date;
     }
-      public LocalTime getTime() {
+
+    public LocalTime getTime() {
         return time;
     }
 }
