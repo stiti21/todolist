@@ -17,151 +17,227 @@ package com.mycompany.finalkanbanwithreminders;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.awt.datatransfer.*;
-import java.time.*;
-import java.time.format.*;
 
 public class FinalKanbanWithReminders extends JFrame {
     
     public FinalKanbanWithReminders() {
-        setTitle("Kanban Board");
+        setTitle("Kanban Board with Reminders");
         setSize(1000, 700);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
         
-        JPanel main = new JPanel(new BorderLayout());
-        JPanel cols = new JPanel(new GridLayout(1,3,15,15));
-        cols.setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(255, 240, 240));
+        add(mainPanel);
+
+        JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15));
+        columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
-        addColumn(cols, "To Do", true);
-        addColumn(cols, "In Progress", false);
-        addColumn(cols, "Done", false);
-        
-        main.add(cols);
-        add(main);
+        addColumn(columns, "To Do", true);
+        addColumn(columns, "In Progress", false);
+        addColumn(columns, "Done", false);
+
+        mainPanel.add(columns, BorderLayout.CENTER);
     }
 
-    void addColumn(JPanel p, String title, boolean canAdd) {
-        JPanel col = new JPanel();
-        col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
-        col.setBorder(BorderFactory.createLineBorder(new Color(220,180,180),2));
-        
-        col.add(new JLabel(title){{setFont(new Font("Arial",Font.BOLD,16));}});
-        col.add(Box.createRigidArea(new Dimension(0,10)));
-        
-        if(canAdd) col.add(new JButton("+ Add Task"){{
-            setBackground(new Color(255,180,180));
-            setForeground(Color.WHITE);
-            addActionListener(e->showAddDialog(col));
-        }});
-        
-        setupDrop(col);
-        p.add(col);
+    private void addColumn(JPanel parent, String title, boolean canAddTasks) {
+        JPanel column = new JPanel();
+        column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
+        column.setBackground(new Color(255, 230, 230));
+        column.setBorder(BorderFactory.createLineBorder(new Color(220, 180, 180), 2));
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        column.add(titleLabel);
+        column.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        if (canAddTasks) {
+            JButton addBtn = new JButton("+ Add Task");
+            styleButton(addBtn);
+            addBtn.addActionListener(e -> showAddTaskDialog(column));
+            column.add(addBtn);
+            column.add(Box.createRigidArea(new Dimension(0, 10)));
+        }
+
+        setupDropTarget(column);
+        parent.add(column);
     }
 
-    void showAddDialog(JPanel col) {
-        JDialog d = new JDialog(this,"Add Task",true);
-        d.setLayout(new GridLayout(0,1,10,10));
+    private void showAddTaskDialog(JPanel targetColumn) {
+        JDialog dialog = new JDialog(this, "Add Task with Reminder", true);
+        dialog.setLayout(new GridLayout(0, 1, 10, 10));
+        dialog.setSize(350, 300);
+
+        JTextField taskField = new JTextField();
+        JComboBox<String> priorityCombo = new JComboBox<>(new String[]{"High", "Medium", "Low"});
         
-        JTextField tf = new JTextField();
-        JComboBox<String> cb = new JComboBox<>(new String[]{"High","Medium","Low"});
-        JSpinner sp = new JSpinner(new SpinnerDateModel());
-        sp.setEditor(new JSpinner.DateEditor(sp,"MM/dd/yyyy hh:mm a"));
-        
-        d.add(new JLabel("Task:"));
-        d.add(tf);
-        d.add(new JLabel("Priority:"));
-        d.add(cb);
-        d.add(new JLabel("Reminder:"));
-        d.add(sp);
-        d.add(new JButton("Save"){{
-            addActionListener(e->{
-                if(!tf.getText().isEmpty()) {
-                    addTask(col,tf.getText(),(String)cb.getSelectedItem(),(java.util.Date)sp.getValue());
-                    d.dispose();
-                }
-            });
-        }});
-        
-        d.setSize(350,300);
-        d.setVisible(true);
+        JSpinner timeSpinner = new JSpinner(new SpinnerDateModel());
+        JSpinner.DateEditor timeEditor = new JSpinner.DateEditor(timeSpinner, "MM/dd/yyyy hh:mm a");
+        timeSpinner.setEditor(timeEditor);
+
+        dialog.add(new JLabel("Task Description:"));
+        dialog.add(taskField);
+        dialog.add(new JLabel("Priority:"));
+        dialog.add(priorityCombo);
+        dialog.add(new JLabel("Reminder Time:"));
+        dialog.add(timeSpinner);
+
+        JButton saveBtn = new JButton("Save with Reminder");
+        saveBtn.addActionListener(e -> {
+            if (!taskField.getText().isEmpty()) {
+                addTaskWithReminder(
+                    targetColumn,
+                    taskField.getText(),
+                    (String) priorityCombo.getSelectedItem(),
+                    (java.util.Date) timeSpinner.getValue()
+                );
+                dialog.dispose();
+            }
+        });
+        dialog.add(saveBtn);
+        dialog.setVisible(true);
     }
 
-    void addTask(JPanel col, String text, String pri, java.util.Date time) {
-        Color c = switch(pri) {
-            case "High"->new Color(255,200,200);
-            case "Medium"->new Color(255,220,180);
-            default->new Color(220,255,200);
-        };
-        
+    private void addTaskWithReminder(JPanel column, String text, String priority, java.util.Date reminderTime) {
+        Color color = getPriorityColor(priority);
         JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(c);
-        card.setBorder(BorderFactory.createLineBorder(c.darker(),2));
-        card.setPreferredSize(new Dimension(180,80));
-        
-        card.add(new JLabel("<html><center>"+text+"</center></html>"));
-        String t = DateTimeFormatter.ofPattern("MMM dd, hh:mm a")
-                   .format(LocalDateTime.ofInstant(time.toInstant(),ZoneId.systemDefault()));
-        card.add(new JLabel("<html><small>"+t+"</small></html>",SwingConstants.RIGHT),BorderLayout.SOUTH);
-        
-        setupDrag(card);
-        col.add(card);
-        col.revalidate();
-        
-        JOptionPane.showMessageDialog(this,"Reminder set for:\n"+t+"\n\nTask: "+text);
+        card.setBackground(color);
+        card.setBorder(BorderFactory.createLineBorder(color.darker(), 2));
+        card.setPreferredSize(new Dimension(180, 80));
+
+        JLabel textLabel = new JLabel("<html><center>" + text + "</center></html>");
+        card.add(textLabel, BorderLayout.CENTER);
+
+        String timeStr = formatReminderTime(reminderTime);
+        JLabel timeLabel = new JLabel("<html><small>" + timeStr + "</small></html>", SwingConstants.RIGHT);
+        card.add(timeLabel, BorderLayout.SOUTH);
+
+        setupDragSource(card);
+        column.add(card);
+        column.revalidate();
+
+        scheduleReminder(text, reminderTime);
     }
 
-    void setupDrag(JPanel card) {
+    private String formatReminderTime(java.util.Date time) {
+        return DateTimeFormatter.ofPattern("MMM dd, hh:mm a")
+            .format(LocalDateTime.ofInstant(time.toInstant(), java.time.ZoneId.systemDefault()));
+    }
+
+    private Color getPriorityColor(String priority) {
+        return switch (priority) {
+            case "High" -> new Color(255, 200, 200);
+            case "Medium" -> new Color(255, 220, 180);
+            case "Low" -> new Color(220, 255, 200);
+            default -> Color.WHITE;
+        };
+    }
+
+    private void styleButton(JButton btn) {
+        btn.setBackground(new Color(255, 180, 180));
+        btn.setForeground(Color.WHITE);
+        btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+    }
+
+    // ===== DRAG AND DROP IMPLEMENTATION =====
+    private void setupDragSource(JPanel card) {
         card.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                ((JComponent)e.getSource()).getTransferHandler().exportAsDrag((JComponent)e.getSource(),e,TransferHandler.MOVE);
+                JComponent c = (JComponent) e.getSource();
+                TransferHandler handler = c.getTransferHandler();
+                handler.exportAsDrag(c, e, TransferHandler.MOVE);
             }
         });
-        
-        card.setTransferHandler(new TransferHandler("bg") {
-            protected Transferable createTransferable(JComponent c) {
-                JPanel p = (JPanel)c;
-                return new StringSelection(
-                    ((JLabel)p.getComponent(0)).getText()+"||"+
-                    (p.getComponentCount()>1?((JLabel)p.getComponent(1)).getText():"")+"||"+
-                    p.getBackground().getRGB()
-                );
+
+        card.setTransferHandler(new TransferHandler("background") {
+            @Override
+            public int getSourceActions(JComponent c) {
+                return TransferHandler.MOVE;
             }
-            public int getSourceActions(JComponent c) { return TransferHandler.MOVE; }
-            protected void exportDone(JComponent c, Transferable t, int a) {
-                if(a==TransferHandler.MOVE) {
-                    c.getParent().remove(c);
-                    c.getParent().revalidate();
+
+            @Override
+            protected Transferable createTransferable(JComponent c) {
+                JPanel card = (JPanel)c;
+                String text = ((JLabel)card.getComponent(0)).getText();
+                String time = card.getComponentCount() > 1 ? ((JLabel)card.getComponent(1)).getText() : "";
+                Color bg = card.getBackground();
+                return new StringSelection(text + "||" + time + "||" + bg.getRGB());
+            }
+
+            @Override
+            protected void exportDone(JComponent source, Transferable data, int action) {
+                if (action == TransferHandler.MOVE) {
+                    Container parent = source.getParent();
+                    parent.remove(source);
+                    parent.revalidate();
+                    parent.repaint();
                 }
             }
         });
     }
 
-    void setupDrop(JPanel col) {
-        col.setTransferHandler(new TransferHandler() {
-            public boolean canImport(TransferSupport s) {
-                col.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));
-                return s.isDataFlavorSupported(DataFlavor.stringFlavor);
+    private void setupDropTarget(JPanel column) {
+        column.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                column.setBorder(BorderFactory.createLineBorder(Color.BLUE, 2));
+                return support.isDataFlavorSupported(DataFlavor.stringFlavor);
             }
-            public boolean importData(TransferSupport s) {
+
+            @Override
+            public boolean importData(TransferSupport support) {
                 try {
-                    String[] d = ((String)s.getTransferable().getTransferData(DataFlavor.stringFlavor)).split("\\|\\|");
-                    JPanel card = new JPanel(new BorderLayout());
-                    card.setBackground(new Color(Integer.parseInt(d[2])));
-                    card.setBorder(BorderFactory.createLineBorder(new Color(220,180,180),2));
-                    card.setPreferredSize(new Dimension(180,80));
-                    card.add(new JLabel(d[0]));
-                    if(!d[1].isEmpty()) card.add(new JLabel(d[1],SwingConstants.RIGHT),BorderLayout.SOUTH);
-                    setupDrag(card);
-                    col.add(card);
-                    col.revalidate();
+                    String data = (String)support.getTransferable().getTransferData(DataFlavor.stringFlavor);
+                    String[] parts = data.split("\\|\\|");
+                    
+                    JPanel newCard = new JPanel(new BorderLayout());
+                    newCard.setBackground(new Color(Integer.parseInt(parts[2])));
+                    newCard.setBorder(BorderFactory.createLineBorder(new Color(220, 180, 180), 2));
+                    newCard.setPreferredSize(new Dimension(180, 80));
+                    
+                    JLabel textLabel = new JLabel(parts[0]);
+                    newCard.add(textLabel, BorderLayout.CENTER);
+                    
+                    if (!parts[1].isEmpty()) {
+                        JLabel timeLabel = new JLabel(parts[1], SwingConstants.RIGHT);
+                        newCard.add(timeLabel, BorderLayout.SOUTH);
+                    }
+                    
+                    setupDragSource(newCard);
+                    column.add(newCard);
+                    column.revalidate();
+                    
                     return true;
-                } catch(Exception e) { return false; }
-                finally { col.setBorder(BorderFactory.createLineBorder(new Color(220,180,180),2)); }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                } finally {
+                    column.setBorder(BorderFactory.createLineBorder(new Color(220, 180, 180), 2));
+                }
             }
         });
+    }
+
+    private void scheduleReminder(String taskText, java.util.Date reminderTime) {
+        String timeStr = formatReminderTime(reminderTime);
+        JOptionPane.showMessageDialog(
+            this, 
+            "Reminder set for:\n" + timeStr + "\n\nTask: " + taskText,
+            "Reminder Scheduled",
+            JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            FinalKanbanWithReminders board = new FinalKanbanWithReminders();
+            board.setVisible(true);
+        });
+    }
+} void main(String[] args) {
         SwingUtilities.invokeLater(()->new FinalKanbanWithReminders().setVisible(true));
     }
 }
