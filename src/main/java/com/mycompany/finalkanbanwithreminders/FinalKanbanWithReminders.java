@@ -22,25 +22,70 @@ import java.time.format.DateTimeFormatter;
 import java.awt.datatransfer.*;
 
 public class FinalKanbanWithReminders extends JFrame {
-    
+    // constructer 
     public FinalKanbanWithReminders() {
         setTitle("Kanban Board with Reminders");
         setSize(1000, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); 
         setLocationRelativeTo(null);
+        
+        // Add window listener for confirmation on close
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                confirmExit();
+            }
+        });
+        
+        // Show welcome message
+        showWelcomeMessage();
         
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(255, 240, 240));
         add(mainPanel);
 
-        JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15));
-        columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15)); // create 3 colomn 
+        columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15)); // add space around colomns 
         
         addColumn(columns, "To Do", true);
         addColumn(columns, "In Progress", false);
         addColumn(columns, "Done", false);
 
         mainPanel.add(columns, BorderLayout.CENTER);
+    }
+
+    private void showWelcomeMessage() {
+        JLabel messageLabel = new JLabel(
+            "<html><div style='text-align: center;'>"
+            + "<h1 style='color:#FF1493;'>Welcome to Kanban Board!</h1>"
+            + "<p style='color:#FF1493; font-size:14pt;'>Created by:</p>"
+            + "<p style='color:#FF1493; font-size:14pt;'>Solaf, Mahasen and Roqia</p>"
+            + "<p style='color:#FF1493; font-size:14pt;'>Enjoy organizing your tasks!</p>"
+            + "</div></html>",
+            SwingConstants.CENTER
+        );
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 16)); //font and size of the message
+
+        JOptionPane.showMessageDialog(
+            this,
+            messageLabel,
+            "Welcome",
+            JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+    
+    private void confirmExit() {
+        int result = JOptionPane.showConfirmDialog(
+            this,
+            "Are you sure you want to exit?",
+            "Confirm Exit",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        );
+        
+        if (result == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
     }
 
     private void addColumn(JPanel parent, String title, boolean canAddTasks) {
