@@ -27,8 +27,33 @@ public class FinalKanbanWithReminders extends JFrame {
     public FinalKanbanWithReminders() {
         setTitle("Kanban Board with Reminders");
         setSize(1000, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // Prevent automatic close
         setLocationRelativeTo(null);
+
+        // 🔹 Add a Window Listener to handle window closing
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Confirmation message before closing
+                int confirm = JOptionPane.showConfirmDialog(
+                    null,
+                    "Are you sure you want to exit the application?",
+                    "Exit Confirmation",
+                    JOptionPane.YES_NO_OPTION
+                );
+
+                // If user clicks "Yes", show goodbye message and close
+                if (confirm == JOptionPane.YES_OPTION) {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Thank you for using the To-Do List Application. Goodbye! 👋",
+                        "Program Terminated",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                    System.exit(0); // Terminate the program
+                }
+            }
+        });
 
         // Main panel for the entire Kanban Board
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -80,11 +105,15 @@ public class FinalKanbanWithReminders extends JFrame {
 
         // Input fields for task description, priority, and reminder time
         JTextField taskField = new JTextField();
+        taskField.setToolTipText("Enter the task description"); // Tooltip for clarity
+        
         JComboBox<String> priorityCombo = new JComboBox<>(new String[]{"High", "Medium", "Low"});
+        priorityCombo.setToolTipText("Select the priority level"); // Tooltip for clarity
         
         JSpinner timeSpinner = new JSpinner(new SpinnerDateModel());
         JSpinner.DateEditor timeEditor = new JSpinner.DateEditor(timeSpinner, "MM/dd/yyyy hh:mm a");
         timeSpinner.setEditor(timeEditor);
+        timeSpinner.setToolTipText("Select the reminder date and time"); // Tooltip for clarity
 
         // Add labels and inputs to the dialog
         dialog.add(new JLabel("Task Description:"));
@@ -105,6 +134,13 @@ public class FinalKanbanWithReminders extends JFrame {
                     (java.util.Date) timeSpinner.getValue()
                 );
                 dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(
+                    dialog,
+                    "❌ Task description cannot be empty!",
+                    "Input Error",
+                    JOptionPane.ERROR_MESSAGE
+                );
             }
         });
         dialog.add(saveBtn);
@@ -138,71 +174,5 @@ public class FinalKanbanWithReminders extends JFrame {
     private String formatReminderTime(java.util.Date time) {
         return DateTimeFormatter.ofPattern("MMM dd, hh:mm a")
             .format(LocalDateTime.ofInstant(time.toInstant(), java.time.ZoneId.systemDefault()));
-    }
-
-    // Get the color based on priority level
-    private Color getPriorityColor(String priority) {
-        return switch (priority) {
-            case "High" -> new Color(255, 200, 200);
-            case "Medium" -> new Color(255, 220, 180);
-            case "Low" -> new Color(220, 255, 200);
-            default -> Color.WHITE;
-        };
-    }
-
-    // Style for the button
-    private void styleButton(JButton btn) {
-        btn.setBackground(new Color(255, 180, 180));
-        btn.setForeground(Color.WHITE);
-        btn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-    }
-
-    // ===== DRAG AND DROP IMPLEMENTATION =====
-    private void setupDragSource(JPanel card) {
-        card.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                JComponent c = (JComponent) e.getSource();
-                TransferHandler handler = c.getTransferHandler();
-                handler.exportAsDrag(c, e, TransferHandler.MOVE);
-            }
-        });
-
-        card.setTransferHandler(new TransferHandler("background"));
-    }
-
-    // Setup drag-and-drop on the columns
-    private void setupDropTarget(JPanel column) {
-        column.setTransferHandler(new TransferHandler() {
-            @Override
-            public boolean canImport(TransferSupport support) {
-                column.setBorder(BorderFactory.createLineBorder(Color.BLUE, 2));
-                return support.isDataFlavorSupported(DataFlavor.stringFlavor);
-            }
-
-            @Override
-            public boolean importData(TransferSupport support) {
-                // Handle the drop action
-                try {
-                    String data = (String)support.getTransferable().getTransferData(DataFlavor.stringFlavor);
-                    String[] parts = data.split("\\|\\|");
-                    JPanel newCard = new JPanel(new BorderLayout());
-                    newCard.setBackground(new Color(Integer.parseInt(parts[2])));
-                    newCard.setPreferredSize(new Dimension(180, 80));
-                    setupDragSource(newCard);
-                    column.add(newCard);
-                    column.revalidate();
-                    return true;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
-        });
-    }
-
-    // Schedule a reminder for the task
-    private void scheduleReminder(String taskText, java.util.Date reminderTime) {
-        String timeStr = formatReminderTime(reminderTime);
-        JOptionPane.showMessageDialog(this, "Reminder set for:\n" + timeStr + "\n\nTask: " + taskText, "Reminder Scheduled", JOptionPane.INFORMATION_MESSAGE);
     }
 }
