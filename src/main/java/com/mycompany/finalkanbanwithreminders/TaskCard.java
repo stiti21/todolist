@@ -5,6 +5,12 @@
 // - Sulaf Ahmed Al-Titi - 2021904034
 // - Ruqaia  Manwar - 2023905070
 // -----------------------------------------------------
+/*
+ * This class represents the visual display of a single task in the Kanban Board.
+ * It creates a card with the task description, priority color, and reminder time.
+ * TaskCard is added to the respective column (To Do, In Progress, Done).
+ * It supports drag-and-drop functionality to move between columns.
+ */
 
 package com.mycompany.finalkanbanwithreminders;
 
