@@ -1,3 +1,10 @@
+// -----------------------------------------------------
+// Mini Project 1 - To-Do List with Reminders
+// Written by: 
+// - Mahasen Al-Tamimi - 2021901162
+// - Sulaf Ahmed Al-Titi - 2021904034
+// - Ruqaia  Manwar - 2023905070
+// -----------------------------------------------------
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
