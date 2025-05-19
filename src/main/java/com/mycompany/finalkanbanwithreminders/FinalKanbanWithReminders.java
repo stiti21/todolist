@@ -20,13 +20,13 @@ import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.awt.datatransfer.*;
-import java.time.*;
+
 public class FinalKanbanWithReminders extends JFrame {
-    // constructer 
+    
     public FinalKanbanWithReminders() {
         setTitle("Kanban Board with Reminders");
         setSize(1000, 700);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); 
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // Changed to handle closing manually
         setLocationRelativeTo(null);
         
         // Add window listener for confirmation on close
@@ -44,8 +44,8 @@ public class FinalKanbanWithReminders extends JFrame {
         mainPanel.setBackground(new Color(255, 240, 240));
         add(mainPanel);
 
-        JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15)); // create 3 colomn 
-        columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15)); // add space around colomns 
+        JPanel columns = new JPanel(new GridLayout(1, 3, 15, 15));
+        columns.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
         addColumn(columns, "To Do", true);
         addColumn(columns, "In Progress", false);
@@ -64,7 +64,7 @@ public class FinalKanbanWithReminders extends JFrame {
             + "</div></html>",
             SwingConstants.CENTER
         );
-        messageLabel.setFont(new Font("Arial", Font.BOLD, 16)); //font and size of the message
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
         JOptionPane.showMessageDialog(
             this,
@@ -159,14 +159,6 @@ public class FinalKanbanWithReminders extends JFrame {
         String timeStr = formatReminderTime(reminderTime);
         JLabel timeLabel = new JLabel("<html><small>" + timeStr + "</small></html>", SwingConstants.RIGHT);
         card.add(timeLabel, BorderLayout.SOUTH);
-        LocalDateTime dateTime = LocalDateTime.ofInstant(reminderTime.toInstant(), ZoneId.systemDefault());
-        LocalDate date = dateTime.toLocalDate();
-        LocalTime time = dateTime.toLocalTime();
-        Task task = new Task(text, priority, date, time);
-        TaskManager.addTask(task);
-        ReminderScheduler scheduler = new ReminderScheduler();
-        scheduler.schedule(task);
-        TaskCard card = new TaskCard(task);
 
         setupDragSource(card);
         column.add(card);
